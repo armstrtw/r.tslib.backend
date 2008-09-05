@@ -38,5 +38,17 @@ public:
   }
 };
 
+template<>
+class r_convert<LGLSXP> {
+public:
+  static TSeries<double,Rtype<LGLSXP>::ValueType,int,R_Backend_TSdata,PosixDate> apply(SEXP x) {
+
+    // build tseries from SEXP x
+    R_Backend_TSdata<double,Rtype<LGLSXP>::ValueType,int>* tsData = R_Backend_TSdata<double,Rtype<LGLSXP>::ValueType,int>::init(x);
+    TSeries<double,Rtype<LGLSXP>::ValueType,int,R_Backend_TSdata,PosixDate> ts(tsData);
+    return ts;
+  }
+};
+
 
 #endif // R2TSERIES_OBJECT_CONVERT_HPP
