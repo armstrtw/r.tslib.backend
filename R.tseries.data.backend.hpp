@@ -3,11 +3,12 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
 #include <Rinternals.h>
 #include <Rsexp.allocator.templates.hpp>
 #include <Rutilities.hpp>
 
-template <typename TDATE,typename TDATA, typename TSDIM = long>
+template <typename TDATE,typename TDATA, typename TSDIM>
 class R_Backend_TSdata {
 private:
   int refcount_;
@@ -135,14 +136,46 @@ void R_Backend_TSdata<TDATE,TDATA,TSDIM>::setColnames(const std::vector<std::str
   if(static_cast<TSDIM>(cnames.size()) != ncols(R_object)) {
     return;
   }
-  setColnamesMatrix(R_object, cnames.begin(),cnames.end());
+  SEXP dimnames, cnames_sexp;
+  int protect_count = 0;
+
+  std::vector<std::string>::const_iterator beg = cnames.begin();
+  std::vector<std::string>::const_iterator end = cnames.end();
+
+  PROTECT(cnames_sexp = string2sexp(beg,end));
+  ++protect_count;
+
+    // check if we have existing dimnames
+  dimnames = getAttrib(R_object, R_DimNamesSymbol);
+  if(dimnames == R_NilValue) {
+    PROTECT(dimnames = allocVector(VECSXP, 2));
+    ++protect_count;
+    SET_VECTOR_ELT(dimnames, 0, R_NilValue);
+  }
+  SET_VECTOR_ELT(dimnames, 1, cnames_sexp);
+  setAttrib(R_object, R_DimNamesSymbol, dimnames);
+  UNPROTECT(protect_count);
 }
 
 template <typename TDATE,typename TDATA, typename TSDIM>
 inline
 std::vector<std::string> R_Backend_TSdata<TDATE,TDATA,TSDIM>::getColnames() const {
   std::vector<std::string> ans;
-  getColnamesMatrix(R_object,inserter(ans, ans.begin()));
+
+  SEXP dimnames = getAttrib(R_object, R_DimNamesSymbol);
+
+  if(dimnames==R_NilValue) {
+    return ans;
+  }
+
+  SEXP cnames = VECTOR_ELT(dimnames, 1);
+
+  if(cnames==R_NilValue) {
+    return ans;
+  }
+  std::insert_iterator<std::vector<std::string> > insert_iter(ans,ans.begin());
+  sexp2string(cnames,insert_iter);
+
   return ans;
 }
 
