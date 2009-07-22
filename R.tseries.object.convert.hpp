@@ -10,6 +10,7 @@
 
 
 using namespace tslib;
+using namespace RAbstraction;
 
 template<SEXPTYPE RTYPE>
 class r_convert;

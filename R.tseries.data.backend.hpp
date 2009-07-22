@@ -8,6 +8,8 @@
 #include <Rsexp.allocator.templates.hpp>
 #include <Rutilities.hpp>
 
+using namespace RAbstraction;
+
 template <typename TDATE,typename TDATA, typename TSDIM>
 class R_Backend_TSdata {
 private:
